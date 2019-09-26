@@ -1,6 +1,6 @@
 # Sistemas de Tiempo Real
 
-##Ideas principales
+## Ideas principales
 * Presentar un hospital más realista donde la estructura siga alguna lógica.
 * Por ejemplo, contar con una sala de espera, guardia y consultorios especializados. 
 * Los pacientes tienen que seguir una lógica de llegar al hospital, esperar a ser atendido, atenderse e irse. La espera no debe ser con desplazamiento aleatorio.
