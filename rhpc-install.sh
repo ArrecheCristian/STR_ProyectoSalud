@@ -27,6 +27,9 @@ cd repast_script/MANUAL_INSTALL
 ./install.sh boost
 ./install.sh rhpc
 
+# Vuelve a la carpeta raiz
+cd ../..
+
 # Reemplaza las variables del env
 env="""
 BOOST_INCLUDE=-I~/sfw/Boost/Boost_1.61/include
@@ -37,6 +40,7 @@ REPAST_HPC_INCLUDE=-I~/sfw/repast_hpc-2.3.0/include/repast_hpc
 REPAST_HPC_LIB_DIR=-L~/sfw/repast_hpc-2.3.0/lib
 REPAST_HPC_LIB=-lrepast_hpc-2.3.0
 """
+echo "$env" > work/env
 
 # Limpia los archivos
 rm -r repast_script repast_script.tgz SRC.tar.gz
