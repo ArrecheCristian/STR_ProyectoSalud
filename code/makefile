@@ -30,9 +30,9 @@ clean_compiled_files:
 
 .PHONY: repast
 repast: clean_compiled_files
-	$(MPICXX) $(REPAST_HPC_DEFINES) $(BOOST_INCLUDE) $(REPAST_HPC_INCLUDE) -I./include -c ./src/Demo_03_Main.cpp -o ./objects/Demo_03_Main.o
-	$(MPICXX) $(REPAST_HPC_DEFINES) $(BOOST_INCLUDE) $(REPAST_HPC_INCLUDE) -I./include -c ./src/Demo_03_Model.cpp -o ./objects/Demo_03_Model.o
-	$(MPICXX) $(REPAST_HPC_DEFINES) $(BOOST_INCLUDE) $(REPAST_HPC_INCLUDE) -I./include -c ./src/Demo_03_Agent.cpp -o ./objects/Demo_03_Agent.o
-	$(MPICXX) $(BOOST_LIB_DIR) $(REPAST_HPC_LIB_DIR) -o ./bin/Demo_03.exe  ./objects/Demo_03_Main.o ./objects/Demo_03_Model.o ./objects/Demo_03_Agent.o $(REPAST_HPC_LIB) $(BOOST_LIBS)
+	$(MPICXX) $(REPAST_HPC_DEFINES) $(BOOST_INCLUDE) $(REPAST_HPC_INCLUDE) -I./include -c ./src/main.cpp -o ./objects/main.o
+	$(MPICXX) $(REPAST_HPC_DEFINES) $(BOOST_INCLUDE) $(REPAST_HPC_INCLUDE) -I./include -c ./src/modelo.cpp -o ./objects/modelo.o
+	$(MPICXX) $(REPAST_HPC_DEFINES) $(BOOST_INCLUDE) $(REPAST_HPC_INCLUDE) -I./include -c ./src/agente.cpp -o ./objects/agente.o
+	$(MPICXX) $(BOOST_LIB_DIR) $(REPAST_HPC_LIB_DIR) -o ./bin/repast.exe  ./objects/main.o ./objects/modelo.o ./objects/agente.o $(REPAST_HPC_LIB) $(BOOST_LIBS)
 
 
