@@ -12,33 +12,37 @@
 class Agente {
 	
 private:
-    repast::AgentId   id_;
-    double              c;
-    double          total;
-	
+    repast::AgentId _id;
+    
+    const float _prob_contagiar;
+    const float _prob_ser_contagiado;
+	bool _enfermo;
+
 public:
-    Agente(repast::AgentId id);
-	Agente(){}
-    Agente(repast::AgentId id, double newC, double newTotal);
+
+    Agente(repast::AgentId id, const float prob_contagiar, const float prob_ser_contagiado, const bool enfermo);
 	
     ~Agente();
 	
     /* Required Getters */
-    virtual repast::AgentId& getId(){                   return id_;    }
-    virtual const repast::AgentId& getId() const {      return id_;    }
+    virtual repast::AgentId& getId(){                   return _id;    }
+    virtual const repast::AgentId& getId() const {      return _id;    }
 	
     /* Getters specific to this kind of Agent */
-    double getC(){                                      return c;      }
-    double getTotal(){                                  return total;  }
-	
-    /* Setter */
-    void set(int currentRank, double newC, double newTotal);
-	
+    float get_prob_contagiar() const { return _prob_contagiar; }
+    float get_prob_ser_contagiado() const { return _prob_ser_contagiado; }
+
     /* Actions */
-    bool cooperate();                                                 // Will indicate whether the agent cooperates or not; probability determined by = c / total
     void play(repast::SharedContext<Agente>* context,
               repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space);    // Choose three other agents from the given context and see if they cooperate or not
     void move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space);
+
+    // Funciones para interaccion entre agentes
+
+    /**
+     * Trata de enfermar al agente en base a una probabilidad interna
+     */
+    void contagiar();
     
 };
 

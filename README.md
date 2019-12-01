@@ -10,3 +10,7 @@
 * Objetos infectados y portadores (sillas, tachos de basura, baño, etc.). Agregarle peso de infección a diferentes objetos, por ejemplo las puertas con alto grado de infección.
 * Agregarle porcentaje de infección a los pacientes (por ejemplo, más porcentaje de infectados a los que van por guardia).
 * Hay dos probabilidades, probabilidad de contagiar **a** otro agente, y probabilidad de ser contagiado **por** otro agente.
+
+## Notas
+
+* **IMPORTANTE** Explicar como funcionan las dos probabilidades, como se combinan.

@@ -2,62 +2,48 @@
 
 #include "agente.h"
 #include "repast_hpc/Moore2DGridQuery.h"
+#include "repast_hpc/VN2DGridQuery.h"
 #include "repast_hpc/Point.h"
 
-Agente::Agente(repast::AgentId id): id_(id), c(100), total(200){ }
+Agente::Agente(const repast::AgentId id, const float prob_contagio, const float prob_ser_contagiado, const bool enfermo) 
+    :   _id{id},
+        _prob_contagiar{prob_contagio},
+        _prob_ser_contagiado{prob_ser_contagiado},
+        _enfermo{enfermo} { }
 
-Agente::Agente(repast::AgentId id, double newC, double newTotal): id_(id), c(newC), total(newTotal){ }
-
-Agente::~Agente(){ }
-
-
-void Agente::set(int currentRank, double newC, double newTotal){
-    id_.currentRank(currentRank);
-    c     = newC;
-    total = newTotal;
-}
-
-bool Agente::cooperate(){
-	return repast::Random::instance()->nextDouble() < c/total;
-}
+Agente::~Agente() { }
 
 void Agente::play(repast::SharedContext<Agente>* context,
-                              repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
-    std::vector<Agente*> agentsToPlay;
-    
-    std::vector<int> agentLoc;
-    space->getLocation(id_, agentLoc);
-    repast::Point<int> center(agentLoc);
-    repast::Moore2DGridQuery<Agente> moore2DQuery(space);
-    moore2DQuery.query(center, 1, false, agentsToPlay);
-    
-    
-    double cPayoff     = 0;
-    double totalPayoff = 0;
-    std::vector<Agente*>::iterator agentToPlay = agentsToPlay.begin();
-    while(agentToPlay != agentsToPlay.end()){
-        std::vector<int> otherLoc;
-        space->getLocation((*agentToPlay)->getId(), otherLoc);
-        repast::Point<int> otherPoint(otherLoc);
-        std::cout << " AGENT " << id_ << " AT " << center << " PLAYING " << ((*agentToPlay)->getId().currentRank() == id_.currentRank() ? "LOCAL" : "NON-LOCAL") << " AGENT " << (*agentToPlay)->getId() << " AT " << otherPoint << std::endl;
-        bool iCooperated = cooperate();                          // Do I cooperate?
-        double payoff = (iCooperated ?
-						 ((*agentToPlay)->cooperate() ?  7 : 1) :     // If I cooperated, did my opponent?
-						 ((*agentToPlay)->cooperate() ? 10 : 3));     // If I didn't cooperate, did my opponent?
-        if(iCooperated) cPayoff += payoff;
-        totalPayoff             += payoff;
-		
-        agentToPlay++;
+                  repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
+
+    // Trata de contagiar a sus adyacente solo si está enfermo
+    if (_enfermo) {
+        
+        std::vector<Agente *> agentes_adyacentes;
+        std::vector<int> ubicacion_agente;
+
+        // Obtiene la ubicación actual del agente y castea point
+        space->getLocation(_id, ubicacion_agente);
+        repast::Point<int> centro(ubicacion_agente);
+
+        // Solicita los agentes adyacentes usando distancia de Von Neumann
+        repast::VN2DGridQuery<Agente> VN2DQuery(space);
+        VN2DQuery.query(centro, 1, false, agentes_adyacentes);
+
+        // Recorre todos los agentes adyacentes tratando de contagiarlos
+        for (auto agente : agentes_adyacentes ) {
+            if ( /* TODO calcular probabilidad de contagiar */ ) agente->contagiar();
+
+        }
+
+
     }
-    c      += cPayoff;
-    total  += totalPayoff;
-	
 }
 
 void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
 
     std::vector<int> agentLoc;
-    space->getLocation(id_, agentLoc);
+    space->getLocation(_id, agentLoc);
     
     std::vector<int> agentNewLoc;
     do{
@@ -73,8 +59,18 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
     
     // TODO cambiar el while para que salga si no encuentra ninguna posición para moverse
 
-    space->moveTo(id_,agentNewLoc);
+    space->moveTo(_id,agentNewLoc);
     
+}
+
+// Funciones para interaccion entre agentes
+
+void Agente::contagiar() {
+
+    if ( /* TODO calcular la probabilidad de ser contagiado */ ) {
+        _enfermo = true;
+    }
+
 }
 
 
