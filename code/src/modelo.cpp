@@ -13,38 +13,6 @@
 
 #include "modelo.h"
 
-
-AgentePackageProvider::AgentePackageProvider(repast::SharedContext<Agente>* agentPtr): agents(agentPtr){ }
-
-void AgentePackageProvider::providePackage(Agente * agent, std::vector<AgentePackage>& out){
-    repast::AgentId id = agent->getId();
-    AgentePackage package(id.id(), id.startingRank(), id.agentType(), id.currentRank(), agent->getC(), agent->getTotal());
-    out.push_back(package);
-}
-
-void AgentePackageProvider::provideContent(repast::AgentRequest req, std::vector<AgentePackage>& out){
-    std::vector<repast::AgentId> ids = req.requestedAgents();
-    for(size_t i = 0; i < ids.size(); i++){
-        providePackage(agents->getAgent(ids[i]), out);
-    }
-}
-
-
-AgentePackageReceiver::AgentePackageReceiver(repast::SharedContext<Agente>* agentPtr): agents(agentPtr){}
-
-Agente * AgentePackageReceiver::createAgent(AgentePackage package){
-    repast::AgentId id(package.id, package.rank, package.type, package.currentRank);
-    return new Agente(id, package.c, package.total);
-}
-
-void AgentePackageReceiver::updateAgent(AgentePackage package){
-    repast::AgentId id(package.id, package.rank, package.type);
-    Agente * agent = agents->getAgent(id);
-    agent->set(package.currentRank, package.c, package.total);
-}
-
-
-
 DataSource_AgentTotals::DataSource_AgentTotals(repast::SharedContext<Agente>* c) : context(c){ }
 
 int DataSource_AgentTotals::getData(){
@@ -78,9 +46,6 @@ RepastHPCDemoModel::RepastHPCDemoModel(std::string propsFile, int argc, char** a
 	stopAt = repast::strToInt(props->getProperty("stop.at"));
 	countOfAgents = repast::strToInt(props->getProperty("count.of.agents"));
 	initializeRandom(*props, comm);
-	if(repast::RepastProcess::instance()->rank() == 0) props->writeToSVFile("./output/record.csv");
-	provider = new AgentePackageProvider(&context);
-	receiver = new AgentePackageReceiver(&context);
 	
     repast::Point<double> origin(-100,-100);
     repast::Point<double> extent(200, 200);
@@ -116,8 +81,6 @@ RepastHPCDemoModel::RepastHPCDemoModel(std::string propsFile, int argc, char** a
 
 RepastHPCDemoModel::~RepastHPCDemoModel(){
 	delete props;
-	delete provider;
-	delete receiver;
 	
 	delete agentValues;
 
@@ -134,59 +97,6 @@ void RepastHPCDemoModel::init(){
         discreteSpace->moveTo(id, initialLocation);
 	}
 }
-
-void RepastHPCDemoModel::requestAgents(){
-	int rank = repast::RepastProcess::instance()->rank();
-	int worldSize= repast::RepastProcess::instance()->worldSize();
-	repast::AgentRequest req(rank);
-	for(int i = 0; i < worldSize; i++){                     // For each process
-		if(i != rank){                                      // ... except this one
-			std::vector<Agente*> agents;        
-			context.selectAgents(5, agents);                // Choose 5 local agents randomly
-			for(size_t j = 0; j < agents.size(); j++){
-				repast::AgentId local = agents[j]->getId();          // Transform each local agent's id into a matching non-local one
-				repast::AgentId other(local.id(), i, 0);
-				other.currentRank(i);
-				req.addRequest(other);                      // Add it to the agent request
-			}
-		}
-	}
-    repast::RepastProcess::instance()->requestAgents<Agente, AgentePackage, AgentePackageProvider, AgentePackageReceiver>(context, req, *provider, *receiver, *receiver);
-}
-
-void RepastHPCDemoModel::cancelAgentRequests(){
-	int rank = repast::RepastProcess::instance()->rank();
-	if(rank == 0) std::cout << "CANCELING AGENT REQUESTS" << std::endl;
-	repast::AgentRequest req(rank);
-	
-	repast::SharedContext<Agente>::const_state_aware_iterator non_local_agents_iter  = context.begin(repast::SharedContext<Agente>::NON_LOCAL);
-	repast::SharedContext<Agente>::const_state_aware_iterator non_local_agents_end   = context.end(repast::SharedContext<Agente>::NON_LOCAL);
-	while(non_local_agents_iter != non_local_agents_end){
-		req.addCancellation((*non_local_agents_iter)->getId());
-		non_local_agents_iter++;
-	}
-    repast::RepastProcess::instance()->requestAgents<Agente, AgentePackage, AgentePackageProvider, AgentePackageReceiver>(context, req, *provider, *receiver, *receiver);
-	
-	std::vector<repast::AgentId> cancellations = req.cancellations();
-	std::vector<repast::AgentId>::iterator idToRemove = cancellations.begin();
-	while(idToRemove != cancellations.end()){
-		context.importedAgentRemoved(*idToRemove);
-		idToRemove++;
-	}
-}
-
-
-void RepastHPCDemoModel::removeLocalAgents(){
-	int rank = repast::RepastProcess::instance()->rank();
-	if(rank == 0) std::cout << "REMOVING LOCAL AGENTS" << std::endl;
-	for(int i = 0; i < 5; i++){
-		repast::AgentId id(i, rank, 0);
-		repast::RepastProcess::instance()->agentRemoved(id);
-		context.removeAgent(id);
-	}
-    repast::RepastProcess::instance()->synchronizeAgentStatus<Agente, AgentePackage, AgentePackageProvider, AgentePackageReceiver>(context, *provider, *receiver, *receiver);
-}
-
 
 void RepastHPCDemoModel::doSomething(){
 	int whichRank = 0;
@@ -238,19 +148,11 @@ void RepastHPCDemoModel::doSomething(){
 		it++;
     }
 
-	discreteSpace->balance();
-    repast::RepastProcess::instance()->synchronizeAgentStatus<Agente, AgentePackage, AgentePackageProvider, AgentePackageReceiver>(context, *provider, *receiver, *receiver);
-    
-    repast::RepastProcess::instance()->synchronizeProjectionInfo<Agente, AgentePackage, AgentePackageProvider, AgentePackageReceiver>(context, *provider, *receiver, *receiver);
-
-	repast::RepastProcess::instance()->synchronizeAgentStates<AgentePackage, AgentePackageProvider, AgentePackageReceiver>(*provider, *receiver);
-    
+	discreteSpace->balance();    
 }
 
 void RepastHPCDemoModel::initSchedule(repast::ScheduleRunner& runner){
-	runner.scheduleEvent(1, repast::Schedule::FunctorPtr(new repast::MethodFunctor<RepastHPCDemoModel> (this, &RepastHPCDemoModel::requestAgents)));
 	runner.scheduleEvent(2, 1, repast::Schedule::FunctorPtr(new repast::MethodFunctor<RepastHPCDemoModel> (this, &RepastHPCDemoModel::doSomething)));
-	//runner.scheduleEvent(3, repast::Schedule::FunctorPtr(new repast::MethodFunctor<RepastHPCDemoModel> (this, &RepastHPCDemoModel::moveAgents)));
 	runner.scheduleEndEvent(repast::Schedule::FunctorPtr(new repast::MethodFunctor<RepastHPCDemoModel> (this, &RepastHPCDemoModel::recordResults)));
 	runner.scheduleStop(stopAt);
 	

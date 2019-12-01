@@ -72,11 +72,3 @@ void Agente::contagiar() {
     }
 
 }
-
-
-/* Serializable Agent Package Data */
-
-AgentePackage::AgentePackage(){ }
-
-AgentePackage::AgentePackage(int _id, int _rank, int _type, int _currentRank, double _c, double _total):
-id(_id), rank(_rank), type(_type), currentRank(_currentRank), c(_c), total(_total){ }

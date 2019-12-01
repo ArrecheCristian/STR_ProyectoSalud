@@ -15,39 +15,6 @@
 
 #include "agente.h"
 
-/* Agent Package Provider */
-class AgentePackageProvider {
-	
-private:
-    repast::SharedContext<Agente>* agents;
-	
-public:
-	
-    AgentePackageProvider(repast::SharedContext<Agente>* agentPtr);
-	
-    void providePackage(Agente * agent, std::vector<AgentePackage>& out);
-	
-    void provideContent(repast::AgentRequest req, std::vector<AgentePackage>& out);
-	
-};
-
-/* Agent Package Receiver */
-class AgentePackageReceiver {
-	
-private:
-    repast::SharedContext<Agente>* agents;
-	
-public:
-	
-    AgentePackageReceiver(repast::SharedContext<Agente>* agentPtr);
-	
-    Agente * createAgent(AgentePackage package);
-	
-    void updateAgent(AgentePackage package);
-	
-};
-
-
 /* Data Collection */
 class DataSource_AgentTotals : public repast::TDataSource<int>{
 private:
@@ -73,9 +40,6 @@ class RepastHPCDemoModel{
 	int countOfAgents;
 	repast::Properties* props;
 	repast::SharedContext<Agente> context;
-	
-	AgentePackageProvider* provider;
-	AgentePackageReceiver* receiver;
 
 	repast::SVDataSet* agentValues;
     repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* discreteSpace;
@@ -84,9 +48,6 @@ public:
 	RepastHPCDemoModel(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm);
 	~RepastHPCDemoModel();
 	void init();
-	void requestAgents();
-	void cancelAgentRequests();
-	void removeLocalAgents();
 	void doSomething();
 	void initSchedule(repast::ScheduleRunner& runner);
 	void recordResults();
