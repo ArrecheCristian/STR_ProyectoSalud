@@ -16,34 +16,34 @@
 #include "agente.h"
 
 /* Agent Package Provider */
-class RepastHPCDemoAgentPackageProvider {
+class AgentePackageProvider {
 	
 private:
-    repast::SharedContext<RepastHPCDemoAgent>* agents;
+    repast::SharedContext<Agente>* agents;
 	
 public:
 	
-    RepastHPCDemoAgentPackageProvider(repast::SharedContext<RepastHPCDemoAgent>* agentPtr);
+    AgentePackageProvider(repast::SharedContext<Agente>* agentPtr);
 	
-    void providePackage(RepastHPCDemoAgent * agent, std::vector<RepastHPCDemoAgentPackage>& out);
+    void providePackage(Agente * agent, std::vector<AgentePackage>& out);
 	
-    void provideContent(repast::AgentRequest req, std::vector<RepastHPCDemoAgentPackage>& out);
+    void provideContent(repast::AgentRequest req, std::vector<AgentePackage>& out);
 	
 };
 
 /* Agent Package Receiver */
-class RepastHPCDemoAgentPackageReceiver {
+class AgentePackageReceiver {
 	
 private:
-    repast::SharedContext<RepastHPCDemoAgent>* agents;
+    repast::SharedContext<Agente>* agents;
 	
 public:
 	
-    RepastHPCDemoAgentPackageReceiver(repast::SharedContext<RepastHPCDemoAgent>* agentPtr);
+    AgentePackageReceiver(repast::SharedContext<Agente>* agentPtr);
 	
-    RepastHPCDemoAgent * createAgent(RepastHPCDemoAgentPackage package);
+    Agente * createAgent(AgentePackage package);
 	
-    void updateAgent(RepastHPCDemoAgentPackage package);
+    void updateAgent(AgentePackage package);
 	
 };
 
@@ -51,20 +51,20 @@ public:
 /* Data Collection */
 class DataSource_AgentTotals : public repast::TDataSource<int>{
 private:
-	repast::SharedContext<RepastHPCDemoAgent>* context;
+	repast::SharedContext<Agente>* context;
 
 public:
-	DataSource_AgentTotals(repast::SharedContext<RepastHPCDemoAgent>* c);
+	DataSource_AgentTotals(repast::SharedContext<Agente>* c);
 	int getData();
 };
 	
 
 class DataSource_AgentCTotals : public repast::TDataSource<int>{
 private:
-	repast::SharedContext<RepastHPCDemoAgent>* context;
+	repast::SharedContext<Agente>* context;
 	
 public:
-	DataSource_AgentCTotals(repast::SharedContext<RepastHPCDemoAgent>* c);
+	DataSource_AgentCTotals(repast::SharedContext<Agente>* c);
 	int getData();
 };
 
@@ -72,13 +72,13 @@ class RepastHPCDemoModel{
 	int stopAt;
 	int countOfAgents;
 	repast::Properties* props;
-	repast::SharedContext<RepastHPCDemoAgent> context;
+	repast::SharedContext<Agente> context;
 	
-	RepastHPCDemoAgentPackageProvider* provider;
-	RepastHPCDemoAgentPackageReceiver* receiver;
+	AgentePackageProvider* provider;
+	AgentePackageReceiver* receiver;
 
 	repast::SVDataSet* agentValues;
-    repast::SharedDiscreteSpace<RepastHPCDemoAgent, repast::StrictBorders, repast::SimpleAdder<RepastHPCDemoAgent> >* discreteSpace;
+    repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* discreteSpace;
 	
 public:
 	RepastHPCDemoModel(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm);

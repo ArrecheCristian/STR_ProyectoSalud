@@ -9,7 +9,7 @@
 
 
 /* Agents */
-class RepastHPCDemoAgent{
+class Agente {
 	
 private:
     repast::AgentId   id_;
@@ -17,11 +17,11 @@ private:
     double          total;
 	
 public:
-    RepastHPCDemoAgent(repast::AgentId id);
-	RepastHPCDemoAgent(){}
-    RepastHPCDemoAgent(repast::AgentId id, double newC, double newTotal);
+    Agente(repast::AgentId id);
+	Agente(){}
+    Agente(repast::AgentId id, double newC, double newTotal);
 	
-    ~RepastHPCDemoAgent();
+    ~Agente();
 	
     /* Required Getters */
     virtual repast::AgentId& getId(){                   return id_;    }
@@ -36,14 +36,14 @@ public:
 	
     /* Actions */
     bool cooperate();                                                 // Will indicate whether the agent cooperates or not; probability determined by = c / total
-    void play(repast::SharedContext<RepastHPCDemoAgent>* context,
-              repast::SharedDiscreteSpace<RepastHPCDemoAgent, repast::StrictBorders, repast::SimpleAdder<RepastHPCDemoAgent> >* space);    // Choose three other agents from the given context and see if they cooperate or not
-    void move(repast::SharedDiscreteSpace<RepastHPCDemoAgent, repast::StrictBorders, repast::SimpleAdder<RepastHPCDemoAgent> >* space);
+    void play(repast::SharedContext<Agente>* context,
+              repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space);    // Choose three other agents from the given context and see if they cooperate or not
+    void move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space);
     
 };
 
 /* Serializable Agent Package */
-struct RepastHPCDemoAgentPackage {
+struct AgentePackage {
 	
 public:
     int    id;
@@ -54,8 +54,8 @@ public:
     double total;
 	
     /* Constructors */
-    RepastHPCDemoAgentPackage(); // For serialization
-    RepastHPCDemoAgentPackage(int _id, int _rank, int _type, int _currentRank, double _c, double _total);
+    AgentePackage(); // For serialization
+    AgentePackage(int _id, int _rank, int _type, int _currentRank, double _c, double _total);
 	
     /* For archive packaging */
     template<class Archive>

@@ -4,37 +4,37 @@
 #include "repast_hpc/Moore2DGridQuery.h"
 #include "repast_hpc/Point.h"
 
-RepastHPCDemoAgent::RepastHPCDemoAgent(repast::AgentId id): id_(id), c(100), total(200){ }
+Agente::Agente(repast::AgentId id): id_(id), c(100), total(200){ }
 
-RepastHPCDemoAgent::RepastHPCDemoAgent(repast::AgentId id, double newC, double newTotal): id_(id), c(newC), total(newTotal){ }
+Agente::Agente(repast::AgentId id, double newC, double newTotal): id_(id), c(newC), total(newTotal){ }
 
-RepastHPCDemoAgent::~RepastHPCDemoAgent(){ }
+Agente::~Agente(){ }
 
 
-void RepastHPCDemoAgent::set(int currentRank, double newC, double newTotal){
+void Agente::set(int currentRank, double newC, double newTotal){
     id_.currentRank(currentRank);
     c     = newC;
     total = newTotal;
 }
 
-bool RepastHPCDemoAgent::cooperate(){
+bool Agente::cooperate(){
 	return repast::Random::instance()->nextDouble() < c/total;
 }
 
-void RepastHPCDemoAgent::play(repast::SharedContext<RepastHPCDemoAgent>* context,
-                              repast::SharedDiscreteSpace<RepastHPCDemoAgent, repast::StrictBorders, repast::SimpleAdder<RepastHPCDemoAgent> >* space){
-    std::vector<RepastHPCDemoAgent*> agentsToPlay;
+void Agente::play(repast::SharedContext<Agente>* context,
+                              repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
+    std::vector<Agente*> agentsToPlay;
     
     std::vector<int> agentLoc;
     space->getLocation(id_, agentLoc);
     repast::Point<int> center(agentLoc);
-    repast::Moore2DGridQuery<RepastHPCDemoAgent> moore2DQuery(space);
+    repast::Moore2DGridQuery<Agente> moore2DQuery(space);
     moore2DQuery.query(center, 1, false, agentsToPlay);
     
     
     double cPayoff     = 0;
     double totalPayoff = 0;
-    std::vector<RepastHPCDemoAgent*>::iterator agentToPlay = agentsToPlay.begin();
+    std::vector<Agente*>::iterator agentToPlay = agentsToPlay.begin();
     while(agentToPlay != agentsToPlay.end()){
         std::vector<int> otherLoc;
         space->getLocation((*agentToPlay)->getId(), otherLoc);
@@ -54,7 +54,7 @@ void RepastHPCDemoAgent::play(repast::SharedContext<RepastHPCDemoAgent>* context
 	
 }
 
-void RepastHPCDemoAgent::move(repast::SharedDiscreteSpace<RepastHPCDemoAgent, repast::StrictBorders, repast::SimpleAdder<RepastHPCDemoAgent> >* space){
+void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
 
     std::vector<int> agentLoc;
     space->getLocation(id_, agentLoc);
@@ -78,7 +78,7 @@ void RepastHPCDemoAgent::move(repast::SharedDiscreteSpace<RepastHPCDemoAgent, re
 
 /* Serializable Agent Package Data */
 
-RepastHPCDemoAgentPackage::RepastHPCDemoAgentPackage(){ }
+AgentePackage::AgentePackage(){ }
 
-RepastHPCDemoAgentPackage::RepastHPCDemoAgentPackage(int _id, int _rank, int _type, int _currentRank, double _c, double _total):
+AgentePackage::AgentePackage(int _id, int _rank, int _type, int _currentRank, double _c, double _total):
 id(_id), rank(_rank), type(_type), currentRank(_currentRank), c(_c), total(_total){ }
