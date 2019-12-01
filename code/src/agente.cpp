@@ -71,6 +71,8 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
         
     }while(!space->bounds().contains(agentNewLoc));
     
+    // TODO cambiar el while para que salga si no encuentra ninguna posición para moverse
+
     space->moveTo(id_,agentNewLoc);
     
 }
