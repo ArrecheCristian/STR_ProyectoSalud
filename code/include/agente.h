@@ -27,10 +27,10 @@ public:
     /* Required Getters */
     virtual repast::AgentId& getId(){                   return _id;    }
     virtual const repast::AgentId& getId() const {      return _id;    }
-	
-    /* Getters specific to this kind of Agent */
-    float get_prob_contagiar() const { return _prob_contagiar; }
-    float get_prob_ser_contagiado() const { return _prob_ser_contagiado; }
+
+    virtual float get_prob_contagiar() const { return _prob_contagiar; }
+    virtual float get_prob_ser_contagiado() const { return _prob_ser_contagiado; }
+	virtual int get_tipo() const { return _enfermo ? 3 : 2 ; }
 
     /* Actions */
     void play(repast::SharedContext<Agente>* context,

@@ -15,38 +15,17 @@
 
 #include "agente.h"
 
-/* Data Collection */
-class DataSource_AgentTotals : public repast::TDataSource<int>{
-private:
-	repast::SharedContext<Agente>* context;
-
-public:
-	DataSource_AgentTotals(repast::SharedContext<Agente>* c);
-	int getData();
-};
-	
-
-class DataSource_AgentCTotals : public repast::TDataSource<int>{
-private:
-	repast::SharedContext<Agente>* context;
-	
-public:
-	DataSource_AgentCTotals(repast::SharedContext<Agente>* c);
-	int getData();
-};
-
-class RepastHPCDemoModel{
+class Modelo {
 	int stopAt;
 	int countOfAgents;
 	repast::Properties* props;
 	repast::SharedContext<Agente> context;
 
-	repast::SVDataSet* agentValues;
     repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* discreteSpace;
 	
 public:
-	RepastHPCDemoModel(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm);
-	~RepastHPCDemoModel();
+	Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm);
+	~Modelo();
 	void init();
 	void doSomething();
 	void initSchedule(repast::ScheduleRunner& runner);

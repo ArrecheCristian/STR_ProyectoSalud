@@ -16,7 +16,7 @@ int main(int argc, char** argv){
 
 	repast::RepastProcess::init(configFile);
 	
-	RepastHPCDemoModel* model = new RepastHPCDemoModel(propsFile, argc, argv, &world);
+	Modelo* model = new Modelo(propsFile, argc, argv, &world);
 	repast::ScheduleRunner& runner = repast::RepastProcess::instance()->getScheduleRunner();
 	
 	model->init();

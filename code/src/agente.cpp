@@ -1,5 +1,7 @@
 /* Demo_03_Agent.cpp */
 
+#include <iostream>
+
 #include "agente.h"
 #include "repast_hpc/Moore2DGridQuery.h"
 #include "repast_hpc/VN2DGridQuery.h"
@@ -32,13 +34,12 @@ void Agente::play(repast::SharedContext<Agente>* context,
 
         // Recorre todos los agentes adyacentes tratando de contagiarlos
         for (auto agente : agentes_adyacentes ) {
-            if ( /* TODO calcular probabilidad de contagiar */ ) agente->contagiar();
+            if ( _prob_contagiar > repast::Random::instance()->nextDouble() ) agente->contagiar();
 
         }
-
-
     }
 }
+
 
 void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
 
@@ -46,7 +47,7 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
     space->getLocation(_id, agentLoc);
     
     std::vector<int> agentNewLoc;
-    do{
+    do {
         agentNewLoc.clear();
         double xRand = repast::Random::instance()->nextDouble();
         double yRand = repast::Random::instance()->nextDouble();
@@ -55,20 +56,19 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
         // Note: checking to see if agent would move outside GLOBAL bounds; exceeding local bounds is OK
         if(!space->bounds().contains(agentNewLoc)) std::cout << " INVALID: " << agentNewLoc[0] << "," << agentNewLoc[1] << std::endl;
         
-    }while(!space->bounds().contains(agentNewLoc));
+    } while(!space->bounds().contains(agentNewLoc));
     
     // TODO cambiar el while para que salga si no encuentra ninguna posición para moverse
-
     space->moveTo(_id,agentNewLoc);
-    
 }
 
 // Funciones para interaccion entre agentes
 
 void Agente::contagiar() {
 
-    if ( /* TODO calcular la probabilidad de ser contagiado */ ) {
+    if ( !_enfermo && _prob_ser_contagiado > repast::Random::instance()->nextDouble() )  {
         _enfermo = true;
+        std::cout << "FUI CONTAGIADO, ID " << _id << std::endl;
     }
 
 }

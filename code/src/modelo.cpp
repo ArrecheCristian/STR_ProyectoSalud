@@ -13,35 +13,7 @@
 
 #include "modelo.h"
 
-DataSource_AgentTotals::DataSource_AgentTotals(repast::SharedContext<Agente>* c) : context(c){ }
-
-int DataSource_AgentTotals::getData(){
-	int sum = 0;
-	repast::SharedContext<Agente>::const_local_iterator iter    = context->localBegin();
-	repast::SharedContext<Agente>::const_local_iterator iterEnd = context->localEnd();
-	while( iter != iterEnd) {
-		sum+= (*iter)->getTotal();
-		iter++;
-	}
-	return sum;
-}
-
-DataSource_AgentCTotals::DataSource_AgentCTotals(repast::SharedContext<Agente>* c) : context(c){ }
-
-int DataSource_AgentCTotals::getData(){
-	int sum = 0;
-	repast::SharedContext<Agente>::const_local_iterator iter    = context->localBegin();
-	repast::SharedContext<Agente>::const_local_iterator iterEnd = context->localEnd();
-	while( iter != iterEnd) {
-		sum+= (*iter)->getC();
-		iter++;
-	}
-	return sum;
-}
-
-
-
-RepastHPCDemoModel::RepastHPCDemoModel(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm): context(comm){
+Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm): context(comm){
 	props = new repast::Properties(propsFile, argc, argv, comm);
 	stopAt = repast::strToInt(props->getProperty("stop.at"));
 	countOfAgents = repast::strToInt(props->getProperty("count.of.agents"));
@@ -52,88 +24,58 @@ RepastHPCDemoModel::RepastHPCDemoModel(std::string propsFile, int argc, char** a
     
     repast::GridDimensions gd(origin, extent);
     
+	// Nota esto estaba en 2, creemos que es el spliteo
     std::vector<int> processDims;
-    processDims.push_back(2);
-    processDims.push_back(2);
+    processDims.push_back(1);
+    processDims.push_back(1);
     
-    discreteSpace = new repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >("AgentDiscreteSpace", gd, processDims, 5, comm);
+    discreteSpace = new repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >("AgentDiscreteSpace", gd, processDims, 0, comm);
 	
     std::cout << "RANK " << repast::RepastProcess::instance()->rank() << " BOUNDS: " << discreteSpace->bounds().origin() << " " << discreteSpace->bounds().extents() << std::endl;
     
    	context.addProjection(discreteSpace);
-    
-	// Data collection
-	// Create the data set builder
-	std::string fileOutputName("./output/agent_total_data.csv");
-	repast::SVDataSetBuilder builder(fileOutputName.c_str(), ",", repast::RepastProcess::instance()->getScheduleRunner().schedule());
-	
-	// Create the individual data sets to be added to the builder
-	DataSource_AgentTotals* agentTotals_DataSource = new DataSource_AgentTotals(&context);
-	builder.addDataSource(createSVDataSource("Total", agentTotals_DataSource, std::plus<int>()));
-
-	DataSource_AgentCTotals* agentCTotals_DataSource = new DataSource_AgentCTotals(&context);
-	builder.addDataSource(createSVDataSource("C", agentCTotals_DataSource, std::plus<int>()));
-
-	// Use the builder to create the data set
-	agentValues = builder.createDataSet();
-	
 }
 
-RepastHPCDemoModel::~RepastHPCDemoModel(){
+
+Modelo::~Modelo(){
 	delete props;
-	
-	delete agentValues;
-
 }
 
-void RepastHPCDemoModel::init(){
+void Modelo::init(){
 	int rank = repast::RepastProcess::instance()->rank();
 	for(int i = 0; i < countOfAgents; i++){
         repast::Point<int> initialLocation((int)discreteSpace->dimensions().origin().getX() + i,(int)discreteSpace->dimensions().origin().getY() + i);
 		repast::AgentId id(i, rank, 0);
 		id.currentRank(rank);
-		Agente* agent = new Agente(id);
+
+		// Crea agentes, los primero 10 enfermos, el resto sanos
+		Agente * agent;
+		if ( i < 10 ) agent = new Agente(id, 0.8, 0.2, true);
+		else agent = new Agente(id, 0.8, 0.2, false);
+
 		context.addAgent(agent);
         discreteSpace->moveTo(id, initialLocation);
 	}
 }
 
-void RepastHPCDemoModel::doSomething(){
+void Modelo::doSomething(){
 	int whichRank = 0;
-	if(repast::RepastProcess::instance()->rank() == whichRank) std::cout << " TICK " << repast::RepastProcess::instance()->getScheduleRunner().currentTick() << std::endl;
+	
+	std::cout << "[ TICK " << repast::RepastProcess::instance()->getScheduleRunner().currentTick() << " ] ";
 
-	if(repast::RepastProcess::instance()->rank() == whichRank){
-		std::cout << "LOCAL AGENTS:" << std::endl;
-		for(int r = 0; r < 4; r++){
-			for(int i = 0; i < 10; i++){
-				repast::AgentId toDisplay(i, r, 0);
-				Agente* agent = context.getAgent(toDisplay);
-				if((agent != 0) && (agent->getId().currentRank() == whichRank)){
-                    std::vector<int> agentLoc;
-                    discreteSpace->getLocation(agent->getId(), agentLoc);
-                    repast::Point<int> agentLocation(agentLoc);
-                    std::cout << agent->getId() << " " << agent->getC() << " " << agent->getTotal() << " AT " << agentLocation << std::endl;
-                }
-			}
-		}
-		
-		std::cout << "NON LOCAL AGENTS:" << std::endl;
-		for(int r = 0; r < 4; r++){
-			for(int i = 0; i < 10; i++){
-				repast::AgentId toDisplay(i, r, 0);
-				Agente* agent = context.getAgent(toDisplay);
-				if((agent != 0) && (agent->getId().currentRank() != whichRank)){
-                    std::vector<int> agentLoc;
-                    discreteSpace->getLocation(agent->getId(), agentLoc);
-                    repast::Point<int> agentLocation(agentLoc);
-                    std::cout << agent->getId() << " " << agent->getC() << " " << agent->getTotal() << " AT " << agentLocation << std::endl;
-                }
-			}
-		}
+	// Imprime la ubicación de todos los agentes, y su tipo (enfermo, sano)
+	for (int i = 0; i < countOfAgents; i++ ) {
+
+		repast::AgentId agente_id(i, 0, 0);						// Genera el ID del agente
+		Agente * agente_a_mostrar = context.getAgent(agente_id);// Obtiene un puntero al agente
+		std::vector<int> ubicacion_ag;							// Obtiene la ubicación del agente
+		discreteSpace->getLocation(agente_id, ubicacion_ag);
+
+		std::cout << i << ";" << agente_a_mostrar->get_tipo() << ";" << ubicacion_ag[0] << ";" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
 	}
 
-	
-	
+	std::cout << std::endl;
+
 	std::vector<Agente*> agents;
 	context.selectAgents(repast::SharedContext<Agente>::LOCAL, countOfAgents, agents);
 	std::vector<Agente*>::iterator it = agents.begin();
@@ -147,22 +89,16 @@ void RepastHPCDemoModel::doSomething(){
 		(*it)->move(discreteSpace);
 		it++;
     }
-
-	discreteSpace->balance();    
 }
 
-void RepastHPCDemoModel::initSchedule(repast::ScheduleRunner& runner){
-	runner.scheduleEvent(2, 1, repast::Schedule::FunctorPtr(new repast::MethodFunctor<RepastHPCDemoModel> (this, &RepastHPCDemoModel::doSomething)));
-	runner.scheduleEndEvent(repast::Schedule::FunctorPtr(new repast::MethodFunctor<RepastHPCDemoModel> (this, &RepastHPCDemoModel::recordResults)));
+void Modelo::initSchedule(repast::ScheduleRunner& runner){
+	runner.scheduleEvent(1, 1, repast::Schedule::FunctorPtr(new repast::MethodFunctor<Modelo> (this, &Modelo::doSomething)));
+	runner.scheduleEndEvent(repast::Schedule::FunctorPtr(new repast::MethodFunctor<Modelo> (this, &Modelo::recordResults)));
 	runner.scheduleStop(stopAt);
 	
-	// Data collection
-	runner.scheduleEvent(1.5, 5, repast::Schedule::FunctorPtr(new repast::MethodFunctor<repast::DataSet>(agentValues, &repast::DataSet::record)));
-	runner.scheduleEvent(10.6, 10, repast::Schedule::FunctorPtr(new repast::MethodFunctor<repast::DataSet>(agentValues, &repast::DataSet::write)));
-	runner.scheduleEndEvent(repast::Schedule::FunctorPtr(new repast::MethodFunctor<repast::DataSet>(agentValues, &repast::DataSet::write)));
 }
 
-void RepastHPCDemoModel::recordResults(){
+void Modelo::recordResults(){
 	if(repast::RepastProcess::instance()->rank() == 0){
 		props->putProperty("Result","Passed");
 		std::vector<std::string> keyOrder;
