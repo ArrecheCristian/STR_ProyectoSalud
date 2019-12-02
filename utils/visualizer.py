@@ -2,6 +2,7 @@
 
 import argparse                 # Herramienta para parsear los argumentos
 from PIL import Image           # Herramienta para manipulación de imágenes
+import re
 
 # Configuración para parsear los argumentos ===================================
 
@@ -28,21 +29,20 @@ assets = [
 
 assets_size = (32, 32)                                  # Tamaño de los assets
 
-map_temp = [ [ 1, 1, 1, 1 ],                            # Mapa temporal de prueba
-             [ 1, 2, 3, 1 ],
-             [ 0, 0, 0, 1 ],
-             [ 1, 0, 3, 1 ],
-             [ 1, 1, 1, 1 ]]
-
-map_size_units = ( len(map_temp[0]), len(map_temp) )
+map_size_units = ( 200, 200 )
 map_size_px = ( map_size_units[0] * assets_size[0], map_size_units[1] * assets_size[1])     # Tamaño del mapa TODO ahora está forzado a mano, pero habría que levantarlo del archivo de mapa
 
 # Genera una imágen de prueba
 imagen = Image.new('RGB', map_size_px)
 
-for y in range(0, map_size_units[1] ):
-    for x in range(0, map_size_units[0] ):
-        coordenada = ( assets_size[0] * x , assets_size[1] * y) 
-        imagen.paste( assets[ map_temp[y][x] ], coordenada )    # Por un tema técnico se guarda primero fila y después columna
+# Si recibe datos, los grafica
+if args.datos:
+    regex="(([0-9]+);([0-9]+);([-0-9]+);([-0-9]+))"
+    for agente in re.findall(regex, args.datos):
+        print(agente)
+        x = int(agente[3]) + 100
+        y = int(agente[4]) + 100
+        tipo = int(agente[2])
+        imagen.paste( assets[tipo], (x * assets_size[0], y * assets_size[1]) )
 
 imagen.save("prueba.jpg", "JPEG")
