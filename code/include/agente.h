@@ -7,6 +7,7 @@
 #include "repast_hpc/SharedContext.h"
 #include "repast_hpc/SharedDiscreteSpace.h"
 
+#include "plano.h"
 
 /* Agents */
 class Agente {
@@ -35,7 +36,7 @@ public:
     /* Actions */
     void play(repast::SharedContext<Agente>* context,
               repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space);    // Choose three other agents from the given context and see if they cooperate or not
-    void move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space);
+    void move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space, const Plano * plano);
 
     // Funciones para interaccion entre agentes
 

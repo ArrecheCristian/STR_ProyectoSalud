@@ -7,6 +7,8 @@
 #include "repast_hpc/VN2DGridQuery.h"
 #include "repast_hpc/Point.h"
 
+#include "plano.h"
+
 Agente::Agente(const repast::AgentId id, const float prob_contagio, const float prob_ser_contagiado, const int tipo) 
     :   _id{id},
         _prob_contagiar{prob_contagio},
@@ -41,7 +43,7 @@ void Agente::play(repast::SharedContext<Agente>* context,
 }
 
 
-void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
+void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space, const Plano * plano){
 
     std::vector<int> agentLoc;
     space->getLocation(_id, agentLoc);
@@ -56,10 +58,10 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
         // Note: checking to see if agent would move outside GLOBAL bounds; exceeding local bounds is OK
         if(!space->bounds().contains(agentNewLoc)) std::cout << " INVALID: " << agentNewLoc[0] << "," << agentNewLoc[1] << std::endl;
         
-    } while(!space->bounds().contains(agentNewLoc));
+    } while( !space->bounds().contains(agentNewLoc) 
+             || plano->hay_pared(agentNewLoc[0], agentNewLoc[1]) );
     
-    // TODO cambiar el while para que salga si no encuentra ninguna posición para moverse
-    space->moveTo(_id,agentNewLoc);
+    space->moveTo(_id, agentNewLoc);
 }
 
 // Funciones para interaccion entre agentes

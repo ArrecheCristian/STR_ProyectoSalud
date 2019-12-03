@@ -140,7 +140,7 @@ void Modelo::doSomething(){
 
     it = agents.begin();
     while(it != agents.end()){
-		(*it)->move(discreteSpace);
+		(*it)->move(discreteSpace, _plano);
 		it++;
     }
 }
@@ -153,6 +153,22 @@ void Modelo::initSchedule(repast::ScheduleRunner& runner){
 }
 
 void Modelo::recordResults(){
+
+	std::cout << "[ TICK " << repast::RepastProcess::instance()->getScheduleRunner().currentTick() << " ] ";
+
+	// Imprime la ubicación de todos los agentes, y su tipo (enfermo, sano)
+	for (int i = 0; i < _cant_agentes_act; i++ ) {
+
+		repast::AgentId agente_id(i, 0, 0);						// Genera el ID del agente
+		Agente * agente_a_mostrar = context.getAgent(agente_id);// Obtiene un puntero al agente
+		std::vector<int> ubicacion_ag;							// Obtiene la ubicación del agente
+		discreteSpace->getLocation(agente_id, ubicacion_ag);
+		
+		std::cout << i << ";" << agente_a_mostrar->get_tipo() << ";" << ubicacion_ag[0] << ";" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
+	}
+
+	std::cout << std::endl;
+	
 	if(repast::RepastProcess::instance()->rank() == 0){
 		props->putProperty("Result","Passed");
 		std::vector<std::string> keyOrder;
