@@ -7,11 +7,11 @@
 #include "repast_hpc/VN2DGridQuery.h"
 #include "repast_hpc/Point.h"
 
-Agente::Agente(const repast::AgentId id, const float prob_contagio, const float prob_ser_contagiado, const bool enfermo) 
+Agente::Agente(const repast::AgentId id, const float prob_contagio, const float prob_ser_contagiado, const int tipo) 
     :   _id{id},
         _prob_contagiar{prob_contagio},
         _prob_ser_contagiado{prob_ser_contagiado},
-        _enfermo{enfermo} { }
+        _enfermo{ tipo == 3 ? true : false } { }
 
 Agente::~Agente() { }
 

@@ -20,7 +20,7 @@ private:
 
 public:
 
-    Agente(repast::AgentId id, const float prob_contagiar, const float prob_ser_contagiado, const bool enfermo);
+    Agente(repast::AgentId id, const float prob_contagiar, const float prob_ser_contagiado, const int tipo);
 	
     ~Agente();
 	

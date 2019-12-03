@@ -4,6 +4,8 @@
 #define DEMO_03_MODEL
 
 #include <boost/mpi.hpp>
+#include <iostream>
+#include <fstream>
 #include "repast_hpc/Schedule.h"
 #include "repast_hpc/Properties.h"
 #include "repast_hpc/SharedContext.h"
@@ -14,13 +16,17 @@
 #include "repast_hpc/GridComponents.h"
 
 #include "agente.h"
+#include "plano.h"
 
 class Modelo {
 	int stopAt;
 	int countOfAgents;
+	int _cant_agentes_act;
 	repast::Properties* props;
 	repast::SharedContext<Agente> context;
 
+    std::ifstream _mapa_archivo;
+	Plano * _plano;
     repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* discreteSpace;
 	
 public:

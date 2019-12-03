@@ -2,10 +2,16 @@
 
 #include <vector>
 
-plano::plano(const int ancho, const int alto, const std::vector<bool> paredes) : _ancho(ancho), _alto(alto), _plano(paredes) {
+Plano::Plano(const int ancho, const int alto) : _ancho(ancho), _alto(alto), _plano(ancho * alto, false) {
     
 }
 
-bool plano::hay_pared(const int x, const int y) const {
+
+bool Plano::hay_pared(const int x, const int y) const {
     return _plano[y * _ancho + x];
+}
+
+
+void Plano::set_pared(const int x, const int y){
+    _plano[y * _ancho + x] = true;
 }
