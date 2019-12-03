@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <vector>
+#include <regex>
+#include <fstream>
+#include <iostream>
 #include <boost/mpi.hpp>
 #include "repast_hpc/AgentId.h"
 #include "repast_hpc/RepastProcess.h"
@@ -13,14 +16,42 @@
 
 #include "modelo.h"
 
-Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm): context(comm){
+Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm): context(comm) {
 	props = new repast::Properties(propsFile, argc, argv, comm);
 	stopAt = repast::strToInt(props->getProperty("stop.at"));
 	countOfAgents = repast::strToInt(props->getProperty("count.of.agents"));
 	initializeRandom(*props, comm);
 	
-    repast::Point<double> origin(-100,-100);
-    repast::Point<double> extent(200, 200);
+	// Toda la parte del mapa
+	std::string mapa_path = argv[3];       // Path al mapa
+	std::ifstream mapa_file (mapa_path);
+	std::string linea;
+
+	int ancho, alto;
+
+	if ( mapa_file.is_open() ) {
+
+		// Procesa la primer linea para sacar las dimensiones del mapa
+		mapa_file >> linea;
+		
+		std::regex linea_tamano("([0-9]+)x([0-9]+)");
+		std::smatch match;
+		std::regex_match(linea, match, linea_tamano);
+
+		ancho = std::stoi(match[1]);
+		alto = std::stoi(match[2]);
+		
+		std::cout << "Dimensiones del mapa: " << ancho << "," << alto << std::endl;
+	} else {
+		std::cout << "Archivo no abierto: " << std::endl;
+	}
+
+	// TODO Mover el archivo a miembro ineterno, y cerrarlo después de que se
+	// carguen los agentes, ahora está cargando dos agentes feos a manopla
+	mapa_file.close();
+
+    repast::Point<double> origin(0, 0);
+    repast::Point<double> extent( static_cast<double>(ancho), static_cast<double>(alto));
     
     repast::GridDimensions gd(origin, extent);
     
@@ -70,7 +101,7 @@ void Modelo::doSomething(){
 		Agente * agente_a_mostrar = context.getAgent(agente_id);// Obtiene un puntero al agente
 		std::vector<int> ubicacion_ag;							// Obtiene la ubicación del agente
 		discreteSpace->getLocation(agente_id, ubicacion_ag);
-
+		
 		std::cout << i << ";" << agente_a_mostrar->get_tipo() << ";" << ubicacion_ag[0] << ";" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
 	}
 

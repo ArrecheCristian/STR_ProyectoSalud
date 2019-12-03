@@ -1,3 +1,3 @@
 #Properties file
-stop.at = 100
-count.of.agents = 40
+stop.at = 5
+count.of.agents = 2
