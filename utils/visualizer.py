@@ -50,9 +50,15 @@ with open(args.plano, "r") as f:
             # son solo válidas para el instante incial
             if not args.datos:
                 mapa[y].append(tipo)
+            else:
+                if tipo < 2:
+                    mapa[y].append(tipo)
+                else:
+                    mapa[y].append(0)
+                     
             
         y += 1
-        
+
 
 map_size_px = ( map_size_units[0] * assets_size[0], map_size_units[1] * assets_size[1])
 
@@ -63,26 +69,22 @@ imagen = Image.new('RGB', map_size_px)
 # tick y en cada tick generar una imágen diferente a partir del
 # mismo fondo+pared
 
+for y in range(0, map_size_units[1] ):
+    for x in range(0, map_size_units[0] ):
+        print(mapa[y][x], end=" ")
+
+        imagen.paste( assets[ mapa[y][x] ], (x * assets_size[0], y * assets_size[1]) )
+
+    print()
+
 # Si recibe datos, los grafica
 if args.datos:
     regex="(([0-9]+);([0-9]+);([-0-9]+);([-0-9]+))"
     for agente in re.findall(regex, args.datos):
         print(agente)
-        x = int(agente[3]) + 100
-        y = int(agente[4]) + 100
+        x = int(agente[3])
+        y = int(agente[4])
         tipo = int(agente[2])
         imagen.paste( assets[tipo], (x * assets_size[0], y * assets_size[1]) )
-
-# Si no recibio datos, grafica solo el mapa
-else:
-    
-    for y in range(0, map_size_units[1] ):
-        for x in range(0, map_size_units[0] ):
-            print(mapa[y][x], end=" ")
-
-            imagen.paste( assets[ mapa[y][x] ], (x * assets_size[0], y * assets_size[1]) )
-
-        print()
-
             
 imagen.save("prueba.jpg", "JPEG")
