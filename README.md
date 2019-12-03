@@ -42,3 +42,9 @@ y una persona enferma en el centro, y una persona sana a la derecha.
 1 0 0 0 1
 1 1 1 1 1
 ```
+
+## Anexo
+
+### Documentación
+
+- Repast HPC Manual, 2013, https://repast.github.io/docs/repast_hpc.pdf
