@@ -3,6 +3,7 @@
 import argparse                 # Herramienta para parsear los argumentos
 from PIL import Image           # Herramienta para manipulación de imágenes
 import re
+import copy
 
 # Configuración para parsear los argumentos ===================================
 
@@ -76,15 +77,30 @@ for y in range(0, map_size_units[1] ):
         imagen.paste( assets[ mapa[y][x] ], (x * assets_size[0], y * assets_size[1]) )
 
     print()
+    
+    imagen.save("img_base.jpg", "JPEG")
 
 # Si recibe datos, los grafica
 if args.datos:
-    regex="(([0-9]+);([0-9]+);([-0-9]+);([-0-9]+))"
-    for agente in re.findall(regex, args.datos):
-        print(agente)
-        x = int(agente[3])
-        y = int(agente[4])
-        tipo = int(agente[2])
-        imagen.paste( assets[tipo], (x * assets_size[0], y * assets_size[1]) )
-            
-imagen.save("prueba.jpg", "JPEG")
+
+    print("Hay datos")
+
+    with open(args.datos, "r") as arch_datos:
+        n = 0
+
+        for linea in arch_datos:
+            imagen_n = copy.deepcopy(imagen)
+            linea_de_info = False
+
+            regex="(([0-9]+);([0-9]+);([-0-9]+);([-0-9]+))"
+            for agente in re.findall(regex, linea):
+                linea_de_info = True
+                print(agente)
+                x = int(agente[3])
+                y = int(agente[4])
+                tipo = int(agente[2])
+                imagen_n.paste( assets[tipo], (x * assets_size[0], y * assets_size[1]) )
+
+            if linea_de_info:
+                n += 1
+                imagen_n.save(f"img{n}.jpg", "JPEG")
