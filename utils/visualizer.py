@@ -103,4 +103,4 @@ if args.datos:
 
             if linea_de_info:
                 n += 1
-                imagen_n.save(f"img{n}.jpg", "JPEG")
+                imagen_n.save(f"img{n:03d}.jpg", "JPEG")

@@ -43,6 +43,57 @@ y una persona enferma en el centro, y una persona sana a la derecha.
 1 1 1 1 1
 ```
 
+## Rendimiento
+
+### 1
+
+real	0m3.416s
+user	0m2.109s
+sys	    0m5.510s
+
+### 2
+
+real	0m4.661s
+user	0m2.300s
+sys	    0m4.802s
+
+real	0m4.946s
+user	0m2.132s
+sys	    0m5.381s
+
+### 3
+
+real	0m8.818s
+user	0m2.726s
+sys	    0m8.097s
+
+real	0m9.064s
+user	0m2.735s
+sys	    0m8.200s
+
+real	0m9.305s
+user	0m2.720s
+sys	    0m7.688s
+
+### 4
+
+real	0m12.645s
+user	0m3.043s
+sys	    0m8.642s
+
+real	0m12.788s
+user	0m2.774s
+sys	    0m8.657s
+
+real	0m13.075s
+user	0m3.007s
+sys	    0m8.665s
+
+real	0m13.577s
+user	0m2.924s
+sys	    0m9.121s
+ 
+
 ## Anexo
 
 ### Documentación
