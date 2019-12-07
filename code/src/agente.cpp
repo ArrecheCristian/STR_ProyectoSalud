@@ -13,7 +13,8 @@ Agente::Agente(const repast::AgentId id, const float prob_contagio, const float 
     :   _id{id},
         _prob_contagiar{prob_contagio},
         _prob_ser_contagiado{prob_ser_contagiado},
-        _enfermo{ tipo == 3 ? true : false } { }
+        _enfermo{ tipo == 3 ? true : false },
+        _me_contagiaron(false) { }
 
 Agente::~Agente() { }
 
@@ -28,9 +29,11 @@ void Agente::set(const int current_rank, const int prob_contagiar, const int pro
 void Agente::play(repast::SharedContext<Agente>* context,
                   repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
 
+    _me_contagiaron = false;
+    
     // Trata de contagiarse de sus adyacente solo si no está enfermo
     if ( ! _enfermo ) {
-        
+
         std::vector<Agente *> agentes_adyacentes;
         std::vector<int> ubicacion_agente;
 
@@ -45,9 +48,9 @@ void Agente::play(repast::SharedContext<Agente>* context,
         // Recorre todos los agentes adyacentes corroborando si debe contagiarse o no
         for (auto agente : agentes_adyacentes ) {   
 
-            if ( _prob_ser_contagiado > repast::Random::instance()->nextDouble() && agente->contagia() ) {
+            if ( _prob_ser_contagiado > repast::Random::instance()->nextDouble() || agente->contagia() ) {
                 _enfermo = true;
-                std::cout << "FUI CONTAGIADO, ID " << _id << std::endl;
+                _me_contagiaron = true;
             }
             
         }
@@ -67,8 +70,6 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
         double yRand = repast::Random::instance()->nextDouble();
         agentNewLoc.push_back(agentLoc[0] + (xRand < .33 ? -1 : (xRand < .66 ? 0 : 1)));
         agentNewLoc.push_back(agentLoc[1] + (yRand < .33 ? -1 : (yRand < .66 ? 0 : 1)));
-        // Note: checking to see if agent would move outside GLOBAL bounds; exceeding local bounds is OK
-        if(!space->bounds().contains(agentNewLoc)) std::cout << " INVALID: " << agentNewLoc[0] << "," << agentNewLoc[1] << std::endl;
         
     } while( !space->bounds().contains(agentNewLoc) 
              || plano->hay_pared(agentNewLoc[0], agentNewLoc[1]) );

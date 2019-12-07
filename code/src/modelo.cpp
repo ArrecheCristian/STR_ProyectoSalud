@@ -73,9 +73,9 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 		ancho = std::stoi(match[1]);
 		alto = std::stoi(match[2]);
 		
-		std::cout << "Dimensiones del mapa: " << ancho << "," << alto << std::endl;
+		if ( repast::RepastProcess::instance()->rank() == 0 )  std::cout << "Dimensiones del mapa: " << ancho << "," << alto << std::endl;
 	} else {
-		std::cout << "Archivo no abierto: " << std::endl;
+		if ( repast::RepastProcess::instance()->rank() == 0 ) std::cout << "Archivo no abierto: " << std::endl;
 	}
 	
     repast::Point<double> origin(0, 0);
@@ -85,12 +85,12 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 
 	// Nota esto estaba en 2, creemos que es el spliteo
     std::vector<int> processDims;
-    processDims.push_back(1);
-    processDims.push_back(1);
+    processDims.push_back(2);
+    processDims.push_back(2);
     
-    discreteSpace = new repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >("AgentDiscreteSpace", gd, processDims, 0, comm);
+    discreteSpace = new repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >("AgentDiscreteSpace", gd, processDims, 1, comm);
 	
-    std::cout << "RANK " << repast::RepastProcess::instance()->rank() << " BOUNDS: " << discreteSpace->bounds().origin() << " " << discreteSpace->bounds().extents() << std::endl;
+    if ( repast::RepastProcess::instance()->rank() == 0 ) std::cout << "RANK " << repast::RepastProcess::instance()->rank() << " BOUNDS: " << discreteSpace->bounds().origin() << " " << discreteSpace->bounds().extents() << std::endl;
     
    	context.addProjection(discreteSpace);
 
@@ -109,66 +109,93 @@ Modelo::~Modelo(){
 void Modelo::init(){
 
 	int rank = repast::RepastProcess::instance()->rank();
+	if ( rank == 0 ) {
 
-	for ( int y = 0; y < _plano->get_alto() ; y++ ) {
-		
-		int x = 0;
-		
-		for (int x = 0; x < _plano->get_ancho(); x++) {
-			int tipo;
-			_mapa_archivo >> tipo;
-
-			// Imprime el tipo que encontró
-			std::cout << tipo << " ";
+		for ( int y = 0; y < _plano->get_alto() ; y++ ) {
 			
-			// Si es una pared, le indica al mapa que ahí hay una pared
-			if ( tipo == 1 ) _plano->set_pared(x, y);
+			int x = 0;
+			
+			for (int x = 0; x < _plano->get_ancho(); x++) {
+				int tipo;
+				_mapa_archivo >> tipo;
 
-			// Si es un agente, lo crea
-			else if ( tipo >= 2 ) {
-
-				repast::Point<int> initialLocation(x,y);
-				repast::AgentId id(_cant_agentes_act++, rank, 0);
-				id.currentRank(rank);
+				// El process 0 tipo que encontró
+				std::cout << tipo << " ";
 				
-				Agente * agent;
-				agent = new Agente(id, 0.8, 0.2, tipo);
-				context.addAgent(agent);
-        		discreteSpace->moveTo(id, initialLocation);
-			}
-	
-		} // for columna
+				// Si es una pared, le indica al mapa que ahí hay una pared
+				if ( tipo == 1 ) _plano->set_pared(x, y);
 
-		std::cout << std::endl;
+				// Si es un agente, lo crea
+				else if ( tipo >= 2 ) {
 
-	} // for fila
+					repast::Point<int> initialLocation(x,y);
+					repast::AgentId id(_cant_agentes_act++, rank, 0);
+					id.currentRank(rank);
+					
+					Agente * agent;
+					agent = new Agente(id, 0.8, 0.2, tipo);
+					context.addAgent(agent);
+					discreteSpace->moveTo(id, initialLocation);
+				}
+		
+			} // for columna
+
+			std::cout << std::endl;
+
+		} // for fila
+	}
 
 	_mapa_archivo.close();
 }
 
 void Modelo::doSomething(){
+
+	discreteSpace->balance();
+        repast::RepastProcess::instance()->synchronizeAgentStatus<Agente, RepastHPCAgentePackage, 
+             RepastHPCAgentePackageProvider, RepastHPCAgentePackageReceiver>(context, *provider, *receiver, *receiver);
+    
+	repast::RepastProcess::instance()->synchronizeProjectionInfo<Agente, RepastHPCAgentePackage, 
+             RepastHPCAgentePackageProvider, RepastHPCAgentePackageReceiver>(context, *provider, *receiver, *receiver);
+
+	repast::RepastProcess::instance()->synchronizeAgentStates<RepastHPCAgentePackage, 
+             RepastHPCAgentePackageProvider, RepastHPCAgentePackageReceiver>(*provider, *receiver);
+
 	int whichRank = 0;
 	
 	int tick = repast::RepastProcess::instance()->getScheduleRunner().currentTick();
-	std::cout << "[ TICK " << tick << " ]";
+	
+	// Si es el rank 0, imprime el estado de todos los agentes
+	if ( repast::RepastProcess::instance()->rank() == whichRank ) {
+		std::cout << "[ TICK " << tick << " ]";
 
-	// Itera sobre los agentes locales para imprimir su estado
-	auto agente_it = context.localBegin();
-	auto it_end = context.localEnd();
+		
+		// Itera sobre los agentes locales para imprimir su estado
+		auto agente_it = context.begin();
+		auto it_end = context.end();
 
-	while ( agente_it != it_end ) {
-		auto agente_a_mostrar = (*agente_it);
+		while ( agente_it != it_end ) {
+			auto agente_a_mostrar = (*agente_it);
 
-		std::vector<int> ubicacion_ag;
-		discreteSpace->getLocation( agente_a_mostrar->getId(), ubicacion_ag );
-		std::cout << "rank=" << agente_a_mostrar->getId().currentRank() << ",id=" << agente_a_mostrar->getId().id() << ",tipo=" << agente_a_mostrar->get_tipo() << ",x=" << ubicacion_ag[0] << ",y=" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
+			std::vector<int> ubicacion_ag;
+			discreteSpace->getLocation( agente_a_mostrar->getId(), ubicacion_ag );
+			std::cout << "rank=" << agente_a_mostrar->getId().currentRank() << ",id=" << agente_a_mostrar->getId().id() << ",tipo=" << agente_a_mostrar->get_tipo() << ",x=" << ubicacion_ag[0] << ",y=" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
 
-		agente_it++;
+			agente_it++;
+		}
+		std::cout << std::endl;
+
+		// Itera sobre los agentes para ver quién se contagio
+		agente_it = context.begin();
+		
+		while ( agente_it != it_end ) {
+			if ((*agente_it)->fue_contagiado() ) std::cout << "Me contagiaron! " << (*agente_it)->getId() << std::endl;
+			agente_it++;
+		}
 	}
-	std::cout << std::endl;
 
 	// Itera sobre los agentes locales para contagiar
-	agente_it = context.localBegin();
+	auto agente_it = context.localBegin();
+	auto it_end = context.localEnd();
 
 	while ( agente_it != it_end ) {
 		(*agente_it)->play(&context, discreteSpace);
@@ -194,21 +221,6 @@ void Modelo::initSchedule(repast::ScheduleRunner& runner){
 
 void Modelo::recordResults(){
 
-	std::cout << "[ TICK " << repast::RepastProcess::instance()->getScheduleRunner().currentTick() << " ] ";
-
-	// Imprime la ubicación de todos los agentes, y su tipo (enfermo, sano)
-	for (int i = 0; i < _cant_agentes_act; i++ ) {
-
-		repast::AgentId agente_id(i, 0, 0);						// Genera el ID del agente
-		Agente * agente_a_mostrar = context.getAgent(agente_id);// Obtiene un puntero al agente
-		std::vector<int> ubicacion_ag;							// Obtiene la ubicación del agente
-		discreteSpace->getLocation(agente_id, ubicacion_ag);
-		
-		std::cout << i << ";" << agente_a_mostrar->get_tipo() << ";" << ubicacion_ag[0] << ";" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
-	}
-
-	std::cout << std::endl;
-	
 	if(repast::RepastProcess::instance()->rank() == 0){
 		props->putProperty("Result","Passed");
 		std::vector<std::string> keyOrder;

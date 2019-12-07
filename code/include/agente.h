@@ -18,6 +18,7 @@ private:
     float _prob_contagiar;
     float _prob_ser_contagiado;
 	bool _enfermo;
+    bool _me_contagiaron;
 
 public:
 
@@ -32,6 +33,7 @@ public:
     virtual float get_prob_contagiar() const { return _prob_contagiar; }
     virtual float get_prob_ser_contagiado() const { return _prob_ser_contagiado; }
 	virtual int get_tipo() const { return _enfermo ? 3 : 2 ; }
+    virtual bool fue_contagiado() const { return _me_contagiaron; }
 
     virtual void set(const int current_rank, const int prob_contagiar, const int prob_ser_contagiado, const int tipo);
 
