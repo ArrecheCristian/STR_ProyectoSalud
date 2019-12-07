@@ -71,6 +71,7 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 
 Modelo::~Modelo(){
 	delete props;
+	delete _plano;
 }
 
 void Modelo::init(){
@@ -110,6 +111,8 @@ void Modelo::init(){
 		std::cout << std::endl;
 
 	} // for fila
+
+	_mapa_archivo.close();
 }
 
 void Modelo::doSomething(){

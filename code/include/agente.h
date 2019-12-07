@@ -39,11 +39,12 @@ public:
     void move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space, const Plano * plano);
 
     // Funciones para interaccion entre agentes
-
+    
     /**
-     * Trata de enfermar al agente en base a una probabilidad interna
+     * Trata de contagiar a otro agente, devuelve true si logra esparcir efectivamente
+     * sus bacterias en el aire
      */
-    void contagiar();
+    bool contagia() const;
     
 };
 

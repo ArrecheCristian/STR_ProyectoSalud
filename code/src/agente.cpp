@@ -20,8 +20,8 @@ Agente::~Agente() { }
 void Agente::play(repast::SharedContext<Agente>* context,
                   repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
 
-    // Trata de contagiar a sus adyacente solo si está enfermo
-    if (_enfermo) {
+    // Trata de contagiarse de sus adyacente solo si no está enfermo
+    if ( ! _enfermo ) {
         
         std::vector<Agente *> agentes_adyacentes;
         std::vector<int> ubicacion_agente;
@@ -34,10 +34,14 @@ void Agente::play(repast::SharedContext<Agente>* context,
         repast::VN2DGridQuery<Agente> VN2DQuery(space);
         VN2DQuery.query(centro, 1, false, agentes_adyacentes);
 
-        // Recorre todos los agentes adyacentes tratando de contagiarlos
-        for (auto agente : agentes_adyacentes ) {
-            if ( _prob_contagiar > repast::Random::instance()->nextDouble() ) agente->contagiar();
-
+        // Recorre todos los agentes adyacentes corroborando si debe contagiarse o no
+        for (auto agente : agentes_adyacentes ) {   
+            
+            if ( _prob_ser_contagiado > repast::Random::instance()->nextDouble() && agente->contagia() ) {
+                _enfermo = true;
+                std::cout << "FUI CONTAGIADO, ID " << _id << std::endl;
+            }
+            
         }
     }
 }
@@ -66,11 +70,8 @@ void Agente::move(repast::SharedDiscreteSpace<Agente, repast::StrictBorders, rep
 
 // Funciones para interaccion entre agentes
 
-void Agente::contagiar() {
+bool Agente::contagia() const {
 
-    if ( !_enfermo && _prob_ser_contagiado > repast::Random::instance()->nextDouble() )  {
-        _enfermo = true;
-        std::cout << "FUI CONTAGIADO, ID " << _id << std::endl;
-    }
+    return ( _enfermo && _prob_contagiar > repast::Random::instance()->nextDouble() ) ? true : false;
 
 }
