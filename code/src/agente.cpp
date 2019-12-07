@@ -17,6 +17,14 @@ Agente::Agente(const repast::AgentId id, const float prob_contagio, const float 
 
 Agente::~Agente() { }
 
+void Agente::set(const int current_rank, const int prob_contagiar, const int prob_ser_contagiado, const int tipo) {
+    _id.currentRank(current_rank);
+    _prob_contagiar = prob_contagiar;
+    _prob_ser_contagiado = prob_ser_contagiado;
+
+    _enfermo = ( tipo == 3 ) ? true : false;
+}
+
 void Agente::play(repast::SharedContext<Agente>* context,
                   repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* space){
 
@@ -36,7 +44,7 @@ void Agente::play(repast::SharedContext<Agente>* context,
 
         // Recorre todos los agentes adyacentes corroborando si debe contagiarse o no
         for (auto agente : agentes_adyacentes ) {   
-            
+
             if ( _prob_ser_contagiado > repast::Random::instance()->nextDouble() && agente->contagia() ) {
                 _enfermo = true;
                 std::cout << "FUI CONTAGIADO, ID " << _id << std::endl;
@@ -75,3 +83,13 @@ bool Agente::contagia() const {
     return ( _enfermo && _prob_contagiar > repast::Random::instance()->nextDouble() ) ? true : false;
 
 }
+
+
+
+//Funciones para la transferencia de agentes entre procesos
+
+// Datos del agente a empaquetar
+RepastHPCAgentePackage::RepastHPCAgentePackage(){ }
+
+RepastHPCAgentePackage::RepastHPCAgentePackage(int _id, int _rank, int _type, int _currentRank, double _prob_contagiar, double _prob_ser_contagiado, int _tipo):
+id(_id), rank(_rank), type(_type), currentRank(_currentRank), prob_contagiar(_prob_contagiar), prob_ser_contagiado(_prob_ser_contagiado), tipo(_tipo){ }

@@ -14,16 +14,51 @@
 #include "repast_hpc/SVDataSet.h"
 #include "repast_hpc/SharedDiscreteSpace.h"
 #include "repast_hpc/GridComponents.h"
+#include "repast_hpc/AgentRequest.h"
 
 #include "agente.h"
 #include "plano.h"
 
+
+//Clases para enviar y recibir paquetes de agentes
+
+//Paquete para enviar agentes
+class RepastHPCAgentePackageProvider {
+	
+private:
+    repast::SharedContext<Agente>* agents;
+	
+public:
+    RepastHPCAgentePackageProvider(repast::SharedContext<Agente>* agentPtr);
+    void providePackage(Agente * agent, std::vector<RepastHPCAgentePackage>& out);
+    void provideContent(repast::AgentRequest req, std::vector<RepastHPCAgentePackage>& out);
+
+};
+
+
+//Paquete para recibir agentes
+class RepastHPCAgentePackageReceiver {
+	
+private:
+    repast::SharedContext<Agente>* agents;
+	
+public:
+    RepastHPCAgentePackageReceiver(repast::SharedContext<Agente>* agentPtr);
+    Agente * createAgent(RepastHPCAgentePackage package);
+    void updateAgent(RepastHPCAgentePackage package);
+	
+};
+
+
+
 class Modelo {
 	int stopAt;
-	int countOfAgents;
 	int _cant_agentes_act;
 	repast::Properties* props;
 	repast::SharedContext<Agente> context;
+
+	RepastHPCAgentePackageProvider* provider;
+	RepastHPCAgentePackageReceiver* receiver;
 
     std::ifstream _mapa_archivo;
 	Plano * _plano;

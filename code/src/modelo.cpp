@@ -16,12 +16,46 @@
 #include "modelo.h"
 #include "plano.h"
 
+RepastHPCAgentePackageProvider::RepastHPCAgentePackageProvider(repast::SharedContext<Agente>* agentPtr): agents(agentPtr){ }
+
+void RepastHPCAgentePackageProvider::providePackage(Agente * agent, std::vector<RepastHPCAgentePackage>& out){
+    repast::AgentId id = agent->getId();
+    RepastHPCAgentePackage package(id.id(), id.startingRank(), id.agentType(), id.currentRank(), agent->get_prob_contagiar(), agent->get_prob_ser_contagiado(), agent->get_tipo());
+    out.push_back(package);
+}
+
+void RepastHPCAgentePackageProvider::provideContent(repast::AgentRequest req, std::vector<RepastHPCAgentePackage>& out){
+    std::vector<repast::AgentId> ids = req.requestedAgents();
+    for(size_t i = 0; i < ids.size(); i++){
+        providePackage(agents->getAgent(ids[i]), out);
+    }
+}
+
+
+RepastHPCAgentePackageReceiver::RepastHPCAgentePackageReceiver(repast::SharedContext<Agente>* agentPtr): agents(agentPtr){}
+
+Agente * RepastHPCAgentePackageReceiver::createAgent(RepastHPCAgentePackage package){
+    repast::AgentId id(package.id, package.rank, package.type, package.currentRank);
+    return new Agente(id, package.prob_contagiar, package.prob_ser_contagiado, package.tipo);
+}
+
+void RepastHPCAgentePackageReceiver::updateAgent(RepastHPCAgentePackage package){
+    repast::AgentId id(package.id, package.rank, package.type);
+    Agente * agent = agents->getAgent(id);
+    agent->set(package.currentRank, package.prob_contagiar, package.prob_ser_contagiado, package.tipo);
+}
+
+
+
 Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm): context(comm), _mapa_archivo(argv[3] ), _cant_agentes_act(0) {
 	props = new repast::Properties(propsFile, argc, argv, comm);
 	stopAt = repast::strToInt(props->getProperty("stop.at"));
-	countOfAgents = repast::strToInt(props->getProperty("count.of.agents"));
-	initializeRandom(*props, comm);
 	
+	initializeRandom(*props, comm);
+
+	provider = new RepastHPCAgentePackageProvider(&context);
+	receiver = new RepastHPCAgentePackageReceiver(&context);
+
 	// Toda la parte del mapa
 	std::string linea;
 
@@ -43,12 +77,7 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 	} else {
 		std::cout << "Archivo no abierto: " << std::endl;
 	}
-
-	// TODO Mover el archivo a miembro ineterno, y cerrarlo después de que se
-	// carguen los agentes, ahora está cargando dos agentes feos a manopla
 	
-	//mapa_file.close();		//Dejamos el archivo abierto para seguir leyendolo desde el init()
-
     repast::Point<double> origin(0, 0);
     repast::Point<double> extent( static_cast<double>(ancho), static_cast<double>(alto));
     
@@ -69,13 +98,15 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 	_plano = new Plano(ancho, alto);
 }
 
+
 Modelo::~Modelo(){
 	delete props;
 	delete _plano;
+	delete provider;
+	delete receiver;
 }
 
 void Modelo::init(){
-
 
 	int rank = repast::RepastProcess::instance()->rank();
 
@@ -118,34 +149,40 @@ void Modelo::init(){
 void Modelo::doSomething(){
 	int whichRank = 0;
 	
-	std::cout << "[ TICK " << repast::RepastProcess::instance()->getScheduleRunner().currentTick() << " ] ";
+	int tick = repast::RepastProcess::instance()->getScheduleRunner().currentTick();
+	std::cout << "[ TICK " << tick << " ]";
 
-	// Imprime la ubicación de todos los agentes, y su tipo (enfermo, sano)
-	for (int i = 0; i < _cant_agentes_act; i++ ) {
+	// Itera sobre los agentes locales para imprimir su estado
+	auto agente_it = context.localBegin();
+	auto it_end = context.localEnd();
 
-		repast::AgentId agente_id(i, 0, 0);						// Genera el ID del agente
-		Agente * agente_a_mostrar = context.getAgent(agente_id);// Obtiene un puntero al agente
-		std::vector<int> ubicacion_ag;							// Obtiene la ubicación del agente
-		discreteSpace->getLocation(agente_id, ubicacion_ag);
-		
-		std::cout << i << ";" << agente_a_mostrar->get_tipo() << ";" << ubicacion_ag[0] << ";" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
+	while ( agente_it != it_end ) {
+		auto agente_a_mostrar = (*agente_it);
+
+		std::vector<int> ubicacion_ag;
+		discreteSpace->getLocation( agente_a_mostrar->getId(), ubicacion_ag );
+		std::cout << "rank=" << agente_a_mostrar->getId().currentRank() << ",id=" << agente_a_mostrar->getId().id() << ",tipo=" << agente_a_mostrar->get_tipo() << ",x=" << ubicacion_ag[0] << ",y=" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
+
+		agente_it++;
 	}
-
 	std::cout << std::endl;
 
-	std::vector<Agente*> agents;
-	context.selectAgents(repast::SharedContext<Agente>::LOCAL, countOfAgents, agents);
-	std::vector<Agente*>::iterator it = agents.begin();
-	while(it != agents.end()){
-        (*it)->play(&context, discreteSpace);
-		it++;
-    }
+	// Itera sobre los agentes locales para contagiar
+	agente_it = context.localBegin();
 
-    it = agents.begin();
-    while(it != agents.end()){
-		(*it)->move(discreteSpace, _plano);
-		it++;
-    }
+	while ( agente_it != it_end ) {
+		(*agente_it)->play(&context, discreteSpace);
+		agente_it++;
+	}
+
+	// Itera sobre los agentes locales para moverse
+	agente_it = context.localBegin();
+
+	while ( agente_it != it_end ) {
+		(*agente_it)->move(discreteSpace, _plano);
+		agente_it++;
+	}
+
 }
 
 void Modelo::initSchedule(repast::ScheduleRunner& runner){
