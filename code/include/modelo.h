@@ -54,6 +54,7 @@ public:
 class Modelo {
 	int stopAt;
 	int _cant_agentes_act;
+	const int _rank;
 	repast::Properties* props;
 	repast::SharedContext<Agente> context;
 
@@ -63,6 +64,8 @@ class Modelo {
     std::ifstream _mapa_archivo;
 	Plano * _plano;
     repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >* discreteSpace;
+
+	std::ofstream _arch_salida;
 	
 public:
 	Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm);

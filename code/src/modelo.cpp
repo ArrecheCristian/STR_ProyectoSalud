@@ -47,7 +47,13 @@ void RepastHPCAgentePackageReceiver::updateAgent(RepastHPCAgentePackage package)
 
 
 
-Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm): context(comm), _mapa_archivo(argv[3] ), _cant_agentes_act(0) {
+Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communicator* comm)
+:	context(comm),
+  	_mapa_archivo(argv[3]),
+	_cant_agentes_act(0),
+	_arch_salida(),
+	_rank(repast::RepastProcess::instance()->rank())
+	{
 	props = new repast::Properties(propsFile, argc, argv, comm);
 	stopAt = repast::strToInt(props->getProperty("stop.at"));
 	
@@ -73,9 +79,9 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 		ancho = std::stoi(match[1]);
 		alto = std::stoi(match[2]);
 		
-		if ( repast::RepastProcess::instance()->rank() == 0 )  std::cout << "Dimensiones del mapa: " << ancho << "," << alto << std::endl;
+		if ( _rank == 0 )  std::cout << "Dimensiones del mapa: " << ancho << "," << alto << std::endl;
 	} else {
-		if ( repast::RepastProcess::instance()->rank() == 0 ) std::cout << "Archivo no abierto: " << std::endl;
+		if ( _rank == 0 ) std::cout << "Archivo no abierto: " << std::endl;
 	}
 	
     repast::Point<double> origin(0, 0);
@@ -90,12 +96,16 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
     
     discreteSpace = new repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >("AgentDiscreteSpace", gd, processDims, 1, comm);
 	
-    if ( repast::RepastProcess::instance()->rank() == 0 ) std::cout << "RANK " << repast::RepastProcess::instance()->rank() << " BOUNDS: " << discreteSpace->bounds().origin() << " " << discreteSpace->bounds().extents() << std::endl;
+    if ( _rank == 0 ) std::cout << "RANK " << _rank << " BOUNDS: " << discreteSpace->bounds().origin() << " " << discreteSpace->bounds().extents() << std::endl;
     
    	context.addProjection(discreteSpace);
 
 	// Crea el plano
 	_plano = new Plano(ancho, alto);
+
+	// Crea el archivo de salida
+	std::string _arch_salida_path = "salida" + std::to_string(_rank);
+	_arch_salida.open(_arch_salida_path, std::ios::trunc);
 }
 
 
@@ -104,12 +114,14 @@ Modelo::~Modelo(){
 	delete _plano;
 	delete provider;
 	delete receiver;
+	
+	// Cierra el archivo de salida
+	_arch_salida.close();
 }
 
 void Modelo::init(){
 
-	int rank = repast::RepastProcess::instance()->rank();
-	if ( rank == 0 ) {
+	if ( _rank == 0 ) {
 
 		for ( int y = 0; y < _plano->get_alto() ; y++ ) {
 			
@@ -129,8 +141,8 @@ void Modelo::init(){
 				else if ( tipo >= 2 ) {
 
 					repast::Point<int> initialLocation(x,y);
-					repast::AgentId id(_cant_agentes_act++, rank, 0);
-					id.currentRank(rank);
+					repast::AgentId id(_cant_agentes_act++, _rank, 0);
+					id.currentRank(_rank);
 					
 					Agente * agent;
 					agent = new Agente(id, 0.8, 0.2, tipo);
@@ -160,43 +172,34 @@ void Modelo::doSomething(){
 	repast::RepastProcess::instance()->synchronizeAgentStates<RepastHPCAgentePackage, 
              RepastHPCAgentePackageProvider, RepastHPCAgentePackageReceiver>(*provider, *receiver);
 
-	int whichRank = 0;
-	
 	int tick = repast::RepastProcess::instance()->getScheduleRunner().currentTick();
 	
-	// Si es el rank 0, imprime el estado de todos los agentes
-	if ( repast::RepastProcess::instance()->rank() == whichRank ) {
-		std::cout << "[ TICK " << tick << " ]";
-
-		
-		// Itera sobre los agentes locales para imprimir su estado
-		auto agente_it = context.begin();
-		auto it_end = context.end();
-
-		while ( agente_it != it_end ) {
-			auto agente_a_mostrar = (*agente_it);
-
-			std::vector<int> ubicacion_ag;
-			discreteSpace->getLocation( agente_a_mostrar->getId(), ubicacion_ag );
-			std::cout << "rank=" << agente_a_mostrar->getId().currentRank() << ",id=" << agente_a_mostrar->getId().id() << ",tipo=" << agente_a_mostrar->get_tipo() << ",x=" << ubicacion_ag[0] << ",y=" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
-
-			agente_it++;
-		}
-		std::cout << std::endl;
-
-		// Itera sobre los agentes para ver quién se contagio
-		agente_it = context.begin();
-		
-		while ( agente_it != it_end ) {
-			if ((*agente_it)->fue_contagiado() ) std::cout << "Me contagiaron! " << (*agente_it)->getId() << std::endl;
-			agente_it++;
-		}
-	}
-
-	// Itera sobre los agentes locales para contagiar
+	// Itera sobre los agentes locales para imprimir su estado
 	auto agente_it = context.localBegin();
 	auto it_end = context.localEnd();
 
+	while ( agente_it != it_end ) {
+		auto agente_a_mostrar = (*agente_it);
+
+		std::vector<int> ubicacion_ag;
+		discreteSpace->getLocation( agente_a_mostrar->getId(), ubicacion_ag );
+		_arch_salida << "rank=" << std::to_string(agente_a_mostrar->getId().currentRank()) << ",id=" << agente_a_mostrar->getId().id() << ",tipo=" << agente_a_mostrar->get_tipo() << ",x=" << ubicacion_ag[0] << ",y=" << ubicacion_ag[1] << ";"; // Imprime el ID del agente, coordenada x, y, y tipo
+
+		agente_it++;
+	}
+	_arch_salida << std::endl;
+
+	// Itera sobre los agentes para ver quién se contagio
+	agente_it = context.localBegin();
+	
+	while ( agente_it != it_end ) {
+		// No podemos imprimir quién fue contagiado porque se rompe
+		// if ((*agente_it)->fue_contagiado() ) _arch_salida << "Me contagiaron! " << (*agente_it)->getId() << std::endl;
+		agente_it++;
+	}
+	
+	// Itera sobre los agentes locales para contagiar
+	agente_it = context.localBegin();
 	while ( agente_it != it_end ) {
 		(*agente_it)->play(&context, discreteSpace);
 		agente_it++;
@@ -221,7 +224,7 @@ void Modelo::initSchedule(repast::ScheduleRunner& runner){
 
 void Modelo::recordResults(){
 
-	if(repast::RepastProcess::instance()->rank() == 0){
+	if(_rank == 0){
 		props->putProperty("Result","Passed");
 		std::vector<std::string> keyOrder;
 		keyOrder.push_back("RunNumber");
