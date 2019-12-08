@@ -91,8 +91,8 @@ Modelo::Modelo(std::string propsFile, int argc, char** argv, boost::mpi::communi
 
 	// Nota esto estaba en 2, creemos que es el spliteo
     std::vector<int> processDims;
-    processDims.push_back(2);
-    processDims.push_back(2);
+    processDims.push_back(repast::strToInt(props->getProperty("x.process")));
+    processDims.push_back(repast::strToInt(props->getProperty("y.process")));
     
     discreteSpace = new repast::SharedDiscreteSpace<Agente, repast::StrictBorders, repast::SimpleAdder<Agente> >("AgentDiscreteSpace", gd, processDims, 1, comm);
 	
@@ -121,41 +121,38 @@ Modelo::~Modelo(){
 
 void Modelo::init(){
 
-	if ( _rank == 0 ) {
-
-		for ( int y = 0; y < _plano->get_alto() ; y++ ) {
-			
-			int x = 0;
-			
-			for (int x = 0; x < _plano->get_ancho(); x++) {
-				int tipo;
-				_mapa_archivo >> tipo;
-
-				// El process 0 tipo que encontró
-				std::cout << tipo << " ";
-				
-				// Si es una pared, le indica al mapa que ahí hay una pared
-				if ( tipo == 1 ) _plano->set_pared(x, y);
-
-				// Si es un agente, lo crea
-				else if ( tipo >= 2 ) {
-
-					repast::Point<int> initialLocation(x,y);
-					repast::AgentId id(_cant_agentes_act++, _rank, 0);
-					id.currentRank(_rank);
-					
-					Agente * agent;
-					agent = new Agente(id, 0.8, 0.2, tipo);
-					context.addAgent(agent);
-					discreteSpace->moveTo(id, initialLocation);
-				}
+	for ( int y = 0; y < _plano->get_alto() ; y++ ) {
 		
-			} // for columna
+		int x = 0;
+		
+		for (int x = 0; x < _plano->get_ancho(); x++) {
+			int tipo;
+			_mapa_archivo >> tipo;
 
-			std::cout << std::endl;
+			// El process 0 tipo que encontró
+			if ( _rank == 0) std::cout << tipo << " ";
+			
+			// Si es una pared, le indica al mapa que ahí hay una pared
+			if ( tipo == 1 ) _plano->set_pared(x, y);
 
-		} // for fila
-	}
+			// Si es un agente, lo crea
+			else if ( tipo >= 2 && _rank == 0) {
+
+				repast::Point<int> initialLocation(x,y);
+				repast::AgentId id(_cant_agentes_act++, _rank, 0);
+				id.currentRank(_rank);
+				
+				Agente * agent;
+				agent = new Agente(id, 0.8, 0.2, tipo);
+				context.addAgent(agent);
+				discreteSpace->moveTo(id, initialLocation);
+			}
+	
+		} // for columna
+
+		if ( _rank == 0)  std::cout << std::endl;
+
+	} // for fila
 
 	_mapa_archivo.close();
 }
