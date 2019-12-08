@@ -92,7 +92,7 @@ if args.datos:
             imagen_n = copy.deepcopy(imagen)
             linea_de_info = False
 
-            regex="(([0-9]+);([0-9]+);([-0-9]+);([-0-9]+))"
+            regex="rank=([0-9]+),id=([0-9]+),tipo=([-0-9]+),x=([-0-9]+),y=([-0-9]+);"
             for agente in re.findall(regex, linea):
                 linea_de_info = True
                 print(agente)
