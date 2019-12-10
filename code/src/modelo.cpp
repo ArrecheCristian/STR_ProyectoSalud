@@ -128,6 +128,7 @@ void Modelo::init(){
 		for (int x = 0; x < _plano->get_ancho(); x++) {
 			int tipo;
 			_mapa_archivo >> tipo;
+			repast::Point<int> initialLocation(x,y);
 
 			// El process 0 tipo que encontró
 			if ( _rank == 0) std::cout << tipo << " ";
@@ -135,10 +136,9 @@ void Modelo::init(){
 			// Si es una pared, le indica al mapa que ahí hay una pared
 			if ( tipo == 1 ) _plano->set_pared(x, y);
 
-			// Si es un agente, lo crea
-			else if ( tipo >= 2 && _rank == 0) {
+			// Si es un agente y cae dentro de las coordenadas cubiertas por el process, lo crea
+			else if ( tipo >= 2 && discreteSpace->dimensions().contains(initialLocation) ) {
 
-				repast::Point<int> initialLocation(x,y);
 				repast::AgentId id(_cant_agentes_act++, _rank, 0);
 				id.currentRank(_rank);
 				
