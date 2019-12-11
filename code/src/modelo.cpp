@@ -131,7 +131,7 @@ void Modelo::init(){
 			repast::Point<int> initialLocation(x,y);
 
 			// El process 0 tipo que encontró
-			if ( _rank == 0) std::cout << tipo << " ";
+			// if ( _rank == 0) std::cout << tipo << " ";
 			
 			// Si es una pared, le indica al mapa que ahí hay una pared
 			if ( tipo == 1 ) _plano->set_pared(x, y);
@@ -150,7 +150,7 @@ void Modelo::init(){
 	
 		} // for columna
 
-		if ( _rank == 0)  std::cout << std::endl;
+		//if ( _rank == 0)  std::cout << std::endl;
 
 	} // for fila
 
