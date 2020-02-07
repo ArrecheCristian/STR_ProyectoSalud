@@ -26,7 +26,7 @@ Al estar desarrollado en C++, que carece de un gestor de paquetes como otros
 lenguajes, las dependencias se tornan problemáticas. Debido a esto, Repast
 provee un archivo con las librerías y versiones apropiadas:
 
-https://github.com/Repast/repast.hpc/releases/tag/v2.3.0
+[https://github.com/Repast/repast.hpc/releases/tag/v2.3.0](https://github.com/Repast/repast.hpc/releases/tag/v2.3.0)
 
 Las librerías de las que depende Repast son:
 
@@ -61,7 +61,7 @@ línea 7 se agrega la carpeta de MPICH a la variable PATH para que Boost y la
 terminal puedan encontrar el binario de MPI.
 
 Para ver ejemplos de compilación, puede usarse como guía los ejemplos que se
-encuentran en: https://repast.github.io/hpc_tutorial/TOC.html.
+encuentran en: [https://repast.github.io/hpc_tutorial/TOC.html](https://repast.github.io/hpc_tutorial/TOC.html).
 
 ## Ejecución
 

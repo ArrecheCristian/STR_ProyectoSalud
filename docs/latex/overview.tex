@@ -13,7 +13,7 @@ simulación y el modelado. De manera resumida, posee las siguientes
 características:
 
 \begin{itemize}
-	
+	\tightlist
 	\item
 	Jerarquía de clases que imitan los objetos de LOGO; Turtles, Patches,
 	Links y Observer.
@@ -39,12 +39,12 @@ Al estar desarrollado en C++, que carece de un gestor de paquetes como
 otros lenguajes, las dependencias se tornan problemáticas. Debido a
 esto, Repast provee un archivo con las librerías y versiones apropiadas:
 
-https://github.com/Repast/repast.hpc/releases/tag/v2.3.0
+\url{https://github.com/Repast/repast.hpc/releases/tag/v2.3.0}
 
 Las librerías de las que depende Repast son:
 
 \begin{itemize}
-	
+	\tightlist
 	\item
 	Herramientas de compilación (g++, make, diff).
 	\item
@@ -85,7 +85,8 @@ MPICH a la variable PATH para que Boost y la terminal puedan encontrar
 el binario de MPI.
 
 Para ver ejemplos de compilación, puede usarse como guía los ejemplos
-que se encuentran en: https://repast.github.io/hpc\_tutorial/TOC.html.
+que se encuentran en:
+\url{https://repast.github.io/hpc_tutorial/TOC.html}.
 
 \subsection{Ejecución}
 
@@ -107,7 +108,7 @@ se definan un conjunto de clases para establecer un entorno donde
 ejecutar la simulación. Este se compone de la siguiente manera:
 
 \begin{itemize}
-	
+	\tightlist
 	\item
 	Agentes
 	\item
@@ -193,10 +194,10 @@ grilla en M x N procesos.
 Ahora los agentes se encuentran distribuidos en diversos procesos, de
 acuerdo a su ubicación en el mapa:
 
-\begin{figure}[H]
+\begin{figure}
 	\centering
 	\includegraphics{process_01.png}
-	\caption{Partición de una proyección espacial entre 2 procesos}
+	\caption{particion}
 \end{figure}
 
 Dado que la principal aplicación de una proyección espacial es obtener
@@ -211,10 +212,10 @@ modificarse, pero permite saber de su existencia). De esta manera,
 cuando un agente cercano al borde solicite los agentes que lo rodean,
 recibirá correctamente los agentes.
 
-\begin{figure}[H]
+\begin{figure}
 	\centering
 	\includegraphics{process_02.png}
-	\caption{Partición de una proyección espacial utilizando un colchón para copiar agentes}
+	\caption{particion\_buffer}
 \end{figure}
 
 En color puede verse toda la información que fue copiada desde el otro
