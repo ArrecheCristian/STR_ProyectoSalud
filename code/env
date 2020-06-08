@@ -5,13 +5,13 @@
 #
 #*******************************
 
-MPICXX=/home/martin/sfw/MPICH/bin/mpicxx -std=c++11 
+MPICXX=mpicxx -std=c++11 
 
-BOOST_INCLUDE=-I/home/martin/sfw/Boost/Boost_1.61/include/
-BOOST_LIB_DIR=-L/home/martin/sfw/Boost/Boost_1.61/lib/
-BOOST_LIBS=-lboost_mpi-mt -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt
+#BOOST_INCLUDE=-I/home/martin/sfw/Boost/Boost_1.61/include/
+#BOOST_LIB_DIR=-L/home/martin/sfw/Boost/Boost_1.61/lib/
+BOOST_LIBS=-lboost_mpi-mt-x64 -lboost_serialization-mt-x64 -lboost_system-mt-x64 -lboost_filesystem-mt-x64
 
-REPAST_HPC_INCLUDE=-I/home/martin/sfw/repast_hpc-2.3.0/include/
-REPAST_HPC_LIB_DIR=-L/home/martin/sfw/repast_hpc-2.3.0/lib/
-REPAST_HPC_LIB=-lrepast_hpc-2.3.0
+#REPAST_HPC_INCLUDE=-I/home/martin/sfw/repast_hpc-2.3.0/include/
+#REPAST_HPC_LIB_DIR=-L/home/martin/sfw/repast_hpc-2.3.0/lib/
+REPAST_HPC_LIB=-lrepast_hpc-2.3.1
 

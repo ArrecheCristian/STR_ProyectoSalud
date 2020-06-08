@@ -1,5 +1,5 @@
 #Properties file
-stop.at = 50
-count.of.agents = 2
-x.process = 1
-y.process = 1
+stop.at = 5000
+count.of.agents = 200
+x.process = 2
+y.process = 2

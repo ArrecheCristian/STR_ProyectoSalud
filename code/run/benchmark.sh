@@ -1,8 +1,8 @@
 #!/bin/bash
 
 mapa="mapa_50x50_500"
-cores="1"
-iteraciones="5"
+cores="4"
+iteraciones="1"
 
 echo "Ejecutando mapa $mapa"
 
